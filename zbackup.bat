@@ -3,9 +3,9 @@ REM Project Zomboid Backup and Restore Script
 
 :MENU
 cls
-echo ==================================================
+echo ====================================================
 echo    Project Zomboid Backup and Restore Tool by ALP
-echo ==================================================
+echo ====================================================
 echo.
 echo Please select an option:
 echo [1] Backup Project Zomboid Data
@@ -33,18 +33,18 @@ set "tempBackupDir=%backupBaseDir%PZ_Backup_Temp"
 REM Create temporary backup directory
 mkdir "%tempBackupDir%" >nul 2>&1
 
-REM Copy necessary data to temporary backup directory
-echo Copying server settings...
-xcopy "%UserProfile%\Zomboid\Server" "%tempBackupDir%\Server" /E /I >nul
+REM Define an array of directories to backup
+set "dirsToBackup=Server Saves\Multiplayer Multiplayer mods db Lua"
 
-echo Copying multiplayer save data...
-xcopy "%UserProfile%\Zomboid\Saves\Multiplayer" "%tempBackupDir%\Saves\Multiplayer" /E /I >nul
-
-echo Copying character data...
-xcopy "%UserProfile%\Zomboid\Multiplayer" "%tempBackupDir%\Multiplayer" /E /I >nul
-
-echo Copying mods...
-xcopy "%UserProfile%\Zomboid\mods" "%tempBackupDir%\mods" /E /I >nul
+REM Loop through directories and copy if they exist
+for %%D in (%dirsToBackup%) do (
+    if exist "%UserProfile%\Zomboid\%%D" (
+        echo Copying %%D...
+        xcopy "%UserProfile%\Zomboid\%%D" "%tempBackupDir%\%%D" /E /I >nul
+    ) else (
+        echo Directory not found: %%D. Skipping...
+    )
+)
 
 REM Detect Steam installation path from registry
 echo Detecting Steam installation path...
@@ -63,8 +63,9 @@ REM Remove any leading spaces
 set "SteamPath=%SteamPath:~1%"
 
 if not "%SteamPath%"=="" (
-    REM Copy Steam Workshop content for Project Zomboid (AppID 108600)
+    REM Output the actual Steam path
     echo Steam installation detected at "%SteamPath%"
+    REM Copy Steam Workshop content for Project Zomboid (AppID 108600)
     set "WorkshopContentPath=%SteamPath%\steamapps\workshop\content\108600"
     if exist "%WorkshopContentPath%" (
         echo Copying Steam Workshop content...
@@ -119,11 +120,17 @@ powershell -NoProfile -Command "Expand-Archive -Path '%~dp0%zipFileName%' -Desti
 REM Restore data from temporary restore directory
 set "tempRestoreDir=%~dp0PZ_Restore_Temp"
 
-REM Check for existing data and prompt before overwriting
-call :RestoreData "%tempRestoreDir%\Server" "%UserProfile%\Zomboid\Server"
-call :RestoreData "%tempRestoreDir%\Saves\Multiplayer" "%UserProfile%\Zomboid\Saves\Multiplayer"
-call :RestoreData "%tempRestoreDir%\Multiplayer" "%UserProfile%\Zomboid\Multiplayer"
-call :RestoreData "%tempRestoreDir%\mods" "%UserProfile%\Zomboid\mods"
+REM Define an array of directories to restore
+set "dirsToRestore=Server Saves\Multiplayer Multiplayer mods db Lua"
+
+REM Loop through directories and restore with confirmation
+for %%D in (%dirsToRestore%) do (
+    if exist "%tempRestoreDir%\%%D" (
+        call :RestoreData "%tempRestoreDir%\%%D" "%UserProfile%\Zomboid\%%D"
+    ) else (
+        echo Directory not found in backup: %%D. Skipping...
+    )
+)
 
 REM Restore Steam Workshop content
 if exist "%tempRestoreDir%\Workshop\content\108600" (
