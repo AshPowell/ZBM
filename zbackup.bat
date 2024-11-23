@@ -103,7 +103,9 @@ if not "%SteamPath%"=="" (
 
 echo Creating zip archive...
 set "zipFileName=ProjectZomboidBackup_%timestamp%.zip"
-powershell -NoProfile -Command "Compress-Archive -Path '%tempBackupDir%\*' -DestinationPath '%backupBaseDir%%zipFileName%' -Force"
+
+REM Corrected Compress-Archive command with proper quoting
+powershell -NoProfile -Command "Compress-Archive -Path \"%tempBackupDir%\*\" -DestinationPath \"%backupBaseDir%%zipFileName%\" -Force"
 if errorlevel 1 (
     echo Error: Failed to create the backup archive.
     echo Please ensure you have sufficient permissions and try again.
@@ -189,7 +191,8 @@ if exist "%tempRestoreDir%" (
     rmdir /S /Q "%tempRestoreDir%" >nul 2>&1
 )
 
-powershell -NoProfile -Command "Expand-Archive -Path '%zipFilePath%' -DestinationPath '%tempRestoreDir%' -Force"
+REM Corrected Expand-Archive command with proper quoting
+powershell -NoProfile -Command "Expand-Archive -Path \"%zipFilePath%\" -DestinationPath \"%tempRestoreDir%\" -Force"
 if errorlevel 1 (
     echo Error: Failed to extract the backup archive.
     echo Please ensure the backup file is not corrupted and try again.
