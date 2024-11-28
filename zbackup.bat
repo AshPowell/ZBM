@@ -174,7 +174,7 @@ if not exist "%zipFilePath%" (
 endlocal
 
 echo.
-echo WARNING: Restoring the backup will overwrite your current Project Zomboid data.
+echo WARNING: Restoring the backup will update your current Project Zomboid data.
 set /p confirm="Do you want to proceed? (Y/N): "
 if /I "%confirm%" NEQ "Y" (
     echo Restore canceled.
@@ -269,25 +269,25 @@ if not exist "%source%" (
 
 if exist "%destination%" (
     echo.
-    echo The destination "%destination%" already exists and will be overwritten.
-    set /p overwrite="Do you want to overwrite it? (Y/N): "
+    echo The destination "%destination%" already exists.
+    set /p overwrite="Do you want to merge and update files? (Y/N): "
     if /I "%overwrite%" NEQ "Y" (
         echo Skipping "%destination%".
         echo Restore skipped by user: "%destination%" >> "%logFile%"
         goto :eof
     )
-) else (
-    echo Creating "%destination%"...
-    mkdir "%destination%" >nul 2>&1
 )
 
-echo Restoring "%destination%"...
-xcopy "%source%" "%destination%" /E /I /-Y /Q
-if errorlevel 1 (
+REM Ensure the destination directory exists
+mkdir "%destination%" >nul 2>&1
+
+REM Use robocopy to copy files without deleting existing files
+robocopy "%source%" "%destination%" /E /XO /NFL /NDL /NJH /NJS
+if %ERRORLEVEL% LEQ 7 (
+    echo Updated "%destination%" with backup files >> "%logFile%"
+) else (
     echo Error: Failed to restore "%destination%".
     echo Restore failed: "%destination%" >> "%logFile%"
-) else (
-    echo Restored "%destination%" >> "%logFile%"
 )
 
 goto :eof
